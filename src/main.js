@@ -4,8 +4,11 @@ const Scheduler = require('node-schedule');
 const Human = require('./human.js');
 const ID = require('./server_constants.js')
 const { calendar_event } = require('./event.js')
+const fs = require('fs');
 
-const init_promise = client.login('NjkzOTAyMDc5MTk4MTAxNjE0.XoD1zQ.OXSmHDQG4KmlfFkI5Hg6GENiZ-o');
+let secret = fs.readFileSync('secret.json');
+let token = JSON.parse(secret).token;
+const init_promise = client.login(token);
 init_promise.then(initializeServer, (reason => console.log(reason)))
 
 // Build up all needed structures in order to start working 
