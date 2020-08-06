@@ -12,7 +12,8 @@ exports.client = client
 exports.Scheduler = Scheduler
 
 // Load bot token from local file
-let secret = fs.readFileSync('secret.json');
+try { let secret = fs.readFileSync('secret.json') } catch { console.log('Create secret file before start')
+  process.exit()} ;e
 let token = JSON.parse(secret).token;
 const init_promise = this.client.login(token);
 
