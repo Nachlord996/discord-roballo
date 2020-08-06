@@ -12,13 +12,14 @@ exports.client = client
 exports.Scheduler = Scheduler
 
 // Load bot token from local file
-try { let secret = fs.readFileSync('secret.json') } catch { console.log('Create secret file before start')
-  process.exit()} ;e
+let secret
+try { secret = fs.readFileSync('secret.json') } catch { console.log('Create secret file before start')
+  process.exit()}
 let token = JSON.parse(secret).token;
 const init_promise = this.client.login(token);
 
 // Set server initialization to login callback
-init_promise.then(initializeServer, (reason => console.log(reason)))
+init_promise.then(initializeServer, (() => console.log('Invalid token, exiting...')))
 
 function initializeServer() {
   console.log('Building up server, this may take a while...')
