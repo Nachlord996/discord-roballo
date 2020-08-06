@@ -162,6 +162,19 @@ function sendCancelationMessage(client, sender) {
     }))
 }
 
+function guestHandler(client, message){
+    var solicitant_id = message.author.id
+    var solicitant_user = message.author.username
+    console.log(solicitant_id + " " + solicitant_user)
+
+    client.guilds.cache.get(ID.SERVER_ID).channels.cache.get(ID.MAIN_CHANNEL_ID).createInvite({unique: true}).then(
+        (invite) => console.log('discord.gg/' + invite.code ), (err) => console.log(err)
+    )
+    
+
+}
+
+exports.guestHandler = guestHandler
 exports.cancelmessage = sendCancelationMessage
 exports.subscribeHandler = subscribeHandler
 exports.helpHanlder = helpHanlder

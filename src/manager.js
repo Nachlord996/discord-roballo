@@ -28,6 +28,12 @@ function manageDMs(client, message) {
                                 message_sender.chatHandler =  Handlers.requestEventData
                                 Handlers.requestEventData(client, message, message_sender)
                             }
+                            break
+                        case '!guest':
+                            if (cmd.length == 1){
+                                Handlers.guestHandler(client, message)
+                            }
+                            break
                         default:
                             break;
                     }
