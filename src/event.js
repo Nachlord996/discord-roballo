@@ -56,6 +56,7 @@ function eventsCheck() {
                 ]
             })
 
+        
             // Send Discord message to announcements channel
             channel.send(event_message).catch((error) => { console.log(`No se pudo enviar notificación por canal: ${channel.name}`) })
 
@@ -74,7 +75,7 @@ function addDays(date, days) {
     var result = new Date(date);
     result.setDate(result.getDate() + days);
     return result;
-  }
+}
 
 exports.eventsCheck = eventsCheck
 exports.calendar_event = calendar_event

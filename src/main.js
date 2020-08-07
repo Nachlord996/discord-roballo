@@ -4,11 +4,12 @@ const client = new Discord.Client();
 const Scheduler = require('node-schedule');
 const ID = require('./server_constants.js')
 const { eventsCheck } = require('./event.js')
-const { serverMessage, directMessage } = require('./manager') 
+const { serverMessage, directMessage, memberAdded } = require('./manager') 
 const fs = require('fs');
 const Data = require('./data')
 
 exports.client = client
+
 exports.Scheduler = Scheduler
 
 // Load bot token from local file
@@ -29,8 +30,10 @@ function initializeServer() {
 
   Data.loadMembersinfo(client)
 
-  // Middleware for upcoming messages
+  // Middleware for upcoming messages and events
   client.on('message', (message) => { if (!IsbotMessage(message)) { if (message.channel.type === 'dm') { directMessage(client, message) } else { serverMessage(client,message) } } })
+  client.on('guildMemberAdd', (member) => memberAdded(member))
+  
   console.log('Server is up, bot commands are now available!')
 }
 

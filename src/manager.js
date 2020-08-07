@@ -1,6 +1,7 @@
 const ID = require('./server_constants.js')
 const Handlers = require('./handlers.js')
 const Data = require('./data') 
+const Scheduler = require('node-schedule');
 
 function manageDMs(client, message) {
 
@@ -30,7 +31,7 @@ function manageDMs(client, message) {
                             }
                             break
                         case '!guest':
-                            if (cmd.length == 1){
+                            if (cmd.length == 1){       
                                 Handlers.guestHandler(client, message)
                             }
                             break
@@ -70,5 +71,37 @@ function manageServerMessage(client, message) {
     }
 }
 
+function memberAdded(member){
+    member.guild.fetchInvites().then((invs) => {
+        const old_invites = Data.cache_invites
+        Data.cache_invites = invs
+        const invite = invs.find(i => old_invites.get(i.code).uses < i.uses)
+        
+        const temporal = Data.invites.find(x => (x.code === invite.code) && (x.start_date == undefined))
+        if (temporal != undefined){
+            temporal.start_date = Date.now()
+            var role = member.guild.roles.cache.find(role => role.name === "Guest");
+            member.roles.add(role)
+            var j = Scheduler.scheduleJob(addHours(Date.now(), 1), function(member){
+                member.kick().then((sec) => {console.log(sec)}, (err) => {console.log(err)} )
+              }.bind(null, member))
+              console.log(j.nextInvocation())
+        }
+
+    } , (err) => console.log(err))
+}
+
+
+function addHours(date, hours) {
+   var d = date + (hours * 3600 * 1000)    
+   return new Date(d);
+}
+
+function addseconds(date, scn) {
+    var d = date + (scn * 1000)    
+    return new Date(d);
+ }
+
+exports.memberAdded = memberAdded
 exports.serverMessage = manageServerMessage
 exports.directMessage = manageDMs 

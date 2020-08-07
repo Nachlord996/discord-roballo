@@ -163,16 +163,38 @@ function sendCancelationMessage(client, sender) {
 }
 
 function guestHandler(client, message){
-    var solicitant_id = message.author.id
-    var solicitant_user = message.author.username
-    console.log(solicitant_id + " " + solicitant_user)
-
-    client.guilds.cache.get(ID.SERVER_ID).channels.cache.get(ID.MAIN_CHANNEL_ID).createInvite({unique: true}).then(
-        (invite) => console.log('discord.gg/' + invite.code ), (err) => console.log(err)
+    client.guilds.cache.get(ID.SERVER_ID).channels.cache.get(ID.MAIN_CHANNEL_ID).createInvite({unique: true, maxAge: 300})
+    .then(
+        (invite) => {
+            var temporal = new temporal_membership(invite.code, message.author.id)
+            Data.invites.push(temporal)
+            message.channel.send(new Discord.MessageEmbed(
+                {
+                    color: '#2d37a6',
+                    title: "🤖 ¡ Tenemos un nuevo invitado ! 🤖",
+                    description: 'Por medio de esta invitación alguien podrá unirse a Virtual UCU.\n¡ Recuerda que el tiempo límite es de 1 hora !',
+                    fields:[ {
+                        name: 'Vínculo',
+                        value: 'discord.gg/' + invite.code,
+                        inline: true
+                    }]
+                }
+            ))
+        }, 
+        (err) => console.log(err))
+    client.guilds.cache.get(ID.SERVER_ID).fetchInvites().then(
+        (invites) => {Data.cache_invites = invites}, 
+        (err) => {console.log(err)}
     )
-    
-
 }
+
+class temporal_membership {
+    constructor(code, creator){
+        this.creator = creator
+        this.code = code
+        this.start_date = undefined
+    }
+}  
 
 exports.guestHandler = guestHandler
 exports.cancelmessage = sendCancelationMessage
