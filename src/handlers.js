@@ -1,5 +1,5 @@
 const Discord = require('discord.js');
-const Data = require('./data') 
+const Data = require('./data')
 const ID = require('./server_constants')
 const main = require('./main')
 const { calendar_event } = require('./event')
@@ -128,29 +128,22 @@ function helpHanlder(message, is_dm_channel) {
 }
 
 function subscribeHandler(message) {
-    var isSubscriber = Data.calendar_subscribers.find((value) => { return value.sub_dm_id === message.author.id })
-    if (!isSubscriber) {
-        Data.calendar_subscribers.push({
-            sub_id: Data.calendar_subscribers.length,
-            sub_dm_id: message.author.id
-        })
+    var success = new Discord.MessageEmbed({
+        title: '🤖 Suscripción exitosa 🤖',
+        color: '#2d37a6',
+        description: "¡ Que alegría, un nuevo suscriptor ! Un placer servirte " + '<@' + message.author.id + '>' + "\n\nRecuerda que siempre puedes dejar de recibir mensajes con el comando \n🔻 `!unsubscribe`"
+    })
 
-        var response = new Discord.MessageEmbed({
-            title: '🤖 Suscripción exitosa 🤖',
-            color: '#2d37a6',
-            description: "¡ Que alegría, un nuevo suscriptor ! Un placer servirte " + '<@' + message.author.id + '>' + "\n\nRecuerda que siempre puedes dejar de recibir mensajes con el comando \n🔻 `!unsubscribe`"
-        })
+    var error = new Discord.MessageEmbed({
+        title: '🤖 Tómalo con calma... 🤖',
+        color: '#2d37a6',
+        description: "\n¡ Ya eres parte de los suscriptores, puedes esperar tranquilamente !"
+    })
 
-    } else {
-        var response = new Discord.MessageEmbed({
-            title: '🤖 Tómalo con calma... 🤖',
-            color: '#2d37a6',
-            description: "\n¡ Ya eres parte de los suscriptores, puedes esperar tranquilamente !"
-        })
-
-    }
-
-    message.channel.send(response)
+    // Fetch database and query for suscriber. Then add it
+    Data.addSubscriber({ sub_dm_id: message.author.id }, function() {message.channel.send(success) }, function() {message.channel.send(error) })
+        
+    
 }
 
 function sendCancelationMessage(client, sender) {
@@ -162,39 +155,59 @@ function sendCancelationMessage(client, sender) {
     }))
 }
 
-function guestHandler(client, message){
-    client.guilds.cache.get(ID.SERVER_ID).channels.cache.get(ID.MAIN_CHANNEL_ID).createInvite({unique: true, maxAge: 300})
-    .then(
-        (invite) => {
-            var temporal = new temporal_membership(invite.code, message.author.id)
-            Data.invites.push(temporal)
-            message.channel.send(new Discord.MessageEmbed(
-                {
-                    color: '#2d37a6',
-                    title: "🤖 ¡ Tenemos un nuevo invitado ! 🤖",
-                    description: 'Por medio de esta invitación alguien podrá unirse a Virtual UCU.\n¡ Recuerda que el tiempo límite es de 1 hora !',
-                    fields:[ {
-                        name: 'Vínculo',
-                        value: 'discord.gg/' + invite.code,
-                        inline: true
-                    }]
-                }
-            ))
-        }, 
-        (err) => console.log(err))
-    client.guilds.cache.get(ID.SERVER_ID).fetchInvites().then(
-        (invites) => {Data.cache_invites = invites}, 
-        (err) => {console.log(err)}
-    )
+function guestHandler(client, message) {
+    var inviter = message.author.id
+    client.guilds.cache.get(ID.SERVER_ID).members.fetch().then((members) => {
+        var member = members.get(inviter)
+        if (member != undefined) {
+            var founder = member.roles.cache.find(o => o.name === 'Founder')
+            if (founder == undefined){
+                message.channel.send(new Discord.MessageEmbed(
+                    {
+                        color: '#2d37a6',
+                        title: "⛔ Acceso Denegado ⛔",
+                        description: 'Has intentado solicitar una membresía pero no tienes los permisos para realizarlo.\nPonte en contacto con el administrador del servidor.'
+                    }
+                ))
+                return
+            }
+        client.guilds.cache.get(ID.SERVER_ID).channels.cache.get(ID.MAIN_CHANNEL_ID).createInvite({ unique: true, maxAge: 300 })
+            .then(
+                (invite) => {
+                    var temporal = new temporal_membership(invite.code, message.author.id)
+                    Data.invites.push(temporal)
+                    message.channel.send(new Discord.MessageEmbed(
+                        {
+                            color: '#2d37a6',
+                            title: "🤖 ¡ Tenemos un nuevo invitado ! 🤖",
+                            description: 'Por medio de esta invitación alguien podrá unirse a Virtual UCU.\n¡ Recuerda que el tiempo límite es de 1 hora !',
+                            fields: [{
+                                name: 'Vínculo',
+                                value: 'discord.gg/' + invite.code,
+                                inline: true
+                            }]
+                        }
+                    ))
+    
+                    client.guilds.cache.get(ID.SERVER_ID).fetchInvites().then(
+                        (invites) => { Data.cache_invites = invites },
+                        (err) => { console.log(err) }
+                    )
+                },
+                (err) => console.log(err))
+            }
+    
+    }, (err) => console.log(err))
+    
 }
 
 class temporal_membership {
-    constructor(code, creator){
+    constructor(code, creator) {
         this.creator = creator
         this.code = code
         this.start_date = undefined
     }
-}  
+}
 
 exports.guestHandler = guestHandler
 exports.cancelmessage = sendCancelationMessage

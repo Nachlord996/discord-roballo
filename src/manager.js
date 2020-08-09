@@ -1,3 +1,4 @@
+const Discord = require('discord.js');
 const ID = require('./server_constants.js')
 const Handlers = require('./handlers.js')
 const Data = require('./data') 
@@ -82,13 +83,23 @@ function memberAdded(member){
             temporal.start_date = Date.now()
             var role = member.guild.roles.cache.find(role => role.name === "Guest");
             member.roles.add(role)
+            console.log(member.guild.channels)
+            member.guild.channels.cache.get(ID.MAIN_CHANNEL_ID).send(
+                new Discord.MessageEmbed(
+                    {
+                        color: '#2d37a6',
+                        title: "🛎️ ¡ Unión temporal detectada ! 🛎️",
+                            description: 'Bienvenido <@' + member.id + '>!\nDisfruta tu estadía en el servidor, la misma durará únicamente 1 hora.\n\nRecuerda que puedes consultar el tiempo restante con el comando:\n`!timeleft`'  
+                    }
+                ))
             var j = Scheduler.scheduleJob(addHours(Date.now(), 1), function(member){
                 member.kick().then((sec) => {console.log(sec)}, (err) => {console.log(err)} )
               }.bind(null, member))
-              console.log(j.nextInvocation())
+
+            invs.find(i => old_invites.get(i.code).uses < i.uses).delete()
         }
 
-    } , (err) => console.log(err))
+     } , (err) => console.log(err))
 }
 
 
