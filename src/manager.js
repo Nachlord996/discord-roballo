@@ -2,6 +2,7 @@ const Discord = require('discord.js');
 const ID = require('./server_constants.js')
 const Handlers = require('./handlers.js')
 const Data = require('./data') 
+const Events = require('./event')
 const Scheduler = require('node-schedule');
 
 function manageDMs(client, message) {
@@ -36,6 +37,14 @@ function manageDMs(client, message) {
                                 Handlers.guestHandler(client, message)
                             }
                             break
+                        case '!fetchEvents':
+                            if (cmd.length == 1){
+                                Events.eventsCheck(client)
+                            }
+                        case '!week':
+                            if (cmd.length == 1){
+                                Handlers.weekTasksHandler(client, message)
+                            }
                         default:
                             break;
                     }
@@ -66,6 +75,11 @@ function manageServerMessage(client, message) {
                     Handlers.helpHanlder(message, false);
                 }
                 break;
+            case '!week':
+                if (cmd.length === 1) {
+                    Handlers.weekTasksHandler(client, message)
+                }
+                break;
             default:
                 break;
         }
@@ -83,7 +97,6 @@ function memberAdded(member){
             temporal.start_date = Date.now()
             var role = member.guild.roles.cache.find(role => role.name === "Guest");
             member.roles.add(role)
-            console.log(member.guild.channels)
             member.guild.channels.cache.get(ID.MAIN_CHANNEL_ID).send(
                 new Discord.MessageEmbed(
                     {

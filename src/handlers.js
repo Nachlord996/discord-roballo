@@ -67,29 +67,10 @@ function requestEventData(client, message, human) {
             human.requestState = 0
             var ev_title = human.requestData.event_title
             var ev_description = human.requestData.event_description
-            Data.events.push(new calendar_event(ev_title, ev_description, parsedDate))
+            var ev = new calendar_event(ev_title, parsedDate, ev_description)
+            
+            Data.addEvent(ev)
 
-            main.Scheduler.scheduleJob(new Date(parsedDate), () => {
-                var announcement_channel = client.channels.cache.get(ID.ANNOUNCEMENTS_CHANNEL_ID)
-
-                var event_message = new Discord.MessageEmbed({
-                    color: '#2d37a6',
-                    title: "⏳¡ Hay un evento en curso ! ⏳",
-                    fields: [
-                        {
-                            name: 'Título',
-                            value: ev_title,
-                            inline: true
-                        },
-                        {
-                            name: 'Descripción',
-                            value: ev_description
-                        }
-                    ]
-                })
-                // Send Discord message to announcements channel
-                announcement_channel.send(event_message)
-            })
             return true;
         default:
             break;
@@ -124,7 +105,7 @@ function helpHanlder(message, is_dm_channel) {
         ],
         description: "Hola, soy el ayudante especial de `Virtual UCU`.\n¿Existe algo peor que las clases por Zoom?\n\n¡Estos comandos te harán sentir un dios todopoderoso! Bueno, tal vez no tanto.\n🔻 `!help` - Solicita ayuda\n🔻 `!subscribe` - Recibe notificaciones a los eventos mediante DMs\n🔻 `!event` - Añade un evento nuevo al calendario 🛠\n🔻 `!cancel` - Elimina la solicitud en progreso\n\nEl ícono 🛠 indica fase experimental.\nSeguimos trabajando en traer nuevas herramientas.\n\nAnímate compañero 💪"
     }))
-    console.log('message sent to: ' + message.author.username)
+
 }
 
 function subscribeHandler(message) {
@@ -142,8 +123,6 @@ function subscribeHandler(message) {
 
     // Fetch database and query for suscriber. Then add it
     Data.addSubscriber({ sub_dm_id: message.author.id }, function() {message.channel.send(success) }, function() {message.channel.send(error) })
-        
-    
 }
 
 function sendCancelationMessage(client, sender) {
@@ -201,6 +180,33 @@ function guestHandler(client, message) {
     
 }
 
+function weekTasksHandler(client, message){
+
+    var success = (docs) => {
+        var events = ""
+        var count = 0
+        docs.forEach(element => {
+            var evdate = new Date(element.event_date)
+            count++
+        events += "🔸 " + evdate.getUTCDate() + '/' + (evdate.getUTCMonth() + 1) + '/' + evdate.getUTCFullYear() +  " - " + element.event_title + "\n"
+        });
+
+        message.channel.send(new Discord.MessageEmbed({
+            title: '🤖 ¡ Tareas para la semana ! 🤖',
+            color: '#2d37a6',
+            fields: [
+                {
+                    name: 'Cantidad',
+                    value: count,
+                }
+            ],
+            description: "Según mis registros, esta es tu información para la semana:\n\n" + events + "\n"
+        }))
+    }
+
+    Data.mapEvents({ $and: [ {"event_date": { $lt : Date.now() + (1000 * 3600 * 24 * 7) } }, { "event_date" : { $gt : Date.now() } }] }, success, () => console.log("not found events"))
+}
+
 class temporal_membership {
     constructor(code, creator) {
         this.creator = creator
@@ -209,8 +215,10 @@ class temporal_membership {
     }
 }
 
+
 exports.guestHandler = guestHandler
 exports.cancelmessage = sendCancelationMessage
 exports.subscribeHandler = subscribeHandler
 exports.helpHanlder = helpHanlder
+exports.weekTasksHandler = weekTasksHandler
 exports.requestEventData = requestEventData
