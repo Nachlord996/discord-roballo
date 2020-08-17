@@ -102,10 +102,10 @@ function memberAdded(member){
                     {
                         color: '#2d37a6',
                         title: "🛎️ ¡ Unión temporal detectada ! 🛎️",
-                            description: 'Bienvenido <@' + member.id + '>!\nDisfruta tu estadía en el servidor, la misma durará únicamente 1 hora.\n\nRecuerda que puedes consultar el tiempo restante con el comando:\n`!timeleft`'  
+                            description: 'Bienvenido <@' + member.id + '>!\nDisfruta tu estadía en el servidor, la misma durará únicamente 2 horas.\n\nRecuerda que puedes consultar el tiempo restante con el comando:\n`!timeleft`'  
                     }
                 ))
-            var j = Scheduler.scheduleJob(addHours(Date.now(), 1), function(member){
+            var j = Scheduler.scheduleJob(addHours(Date.now(), 2), function(member){
                 member.kick().then((sec) => {console.log(sec)}, (err) => {console.log(err)} )
               }.bind(null, member))
 

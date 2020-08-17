@@ -16,7 +16,7 @@ let secret
 try { secret = fs.readFileSync('secret.json') } catch { console.log('Create secret file before start')
   process.exit() }
 let token = JSON.parse(secret).token;
-const init_promise = this.client.login(token);
+const init_promise = client.login(token);
 
 // Set server initialization to login callback
 init_promise.then(initializeServer, (() => console.log('Invalid token, exiting...')))
@@ -26,7 +26,7 @@ function initializeServer() {
 
   Data.initializeData()
 
-  var rule = new Scheduler.RecurrenceRule(null, null, null, null, 4, 0);
+  var rule = new Scheduler.RecurrenceRule(null, null, null, null, 12, 0);
   Scheduler.scheduleJob(rule, eventsCheck)
 
   Data.loadMembersinfo(client)

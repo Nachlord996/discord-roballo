@@ -159,7 +159,7 @@ function guestHandler(client, message) {
                         {
                             color: '#2d37a6',
                             title: "🤖 ¡ Tenemos un nuevo invitado ! 🤖",
-                            description: 'Por medio de esta invitación alguien podrá unirse a Virtual UCU.\n¡ Recuerda que el tiempo límite es de 1 hora !',
+                            description: 'Por medio de esta invitación alguien podrá unirse a Virtual UCU.\n¡ Recuerda que el tiempo límite es de 2 horas !',
                             fields: [{
                                 name: 'Vínculo',
                                 value: 'discord.gg/' + invite.code,
@@ -185,6 +185,16 @@ function weekTasksHandler(client, message){
     var success = (docs) => {
         var events = ""
         var count = 0
+        if (docs.length == 0) {
+            message.channel.send(new Discord.MessageEmbed({
+                title: '🤖 ¡ Nada para hacer ! 🤖',
+                color: '#2d37a6',
+                description: 'Por el momento estás libre, tómalo con calma.\nEsta vez invito yo ! 🍺'
+            })
+
+            )
+            return;   
+        }
         docs.forEach(element => {
             var evdate = new Date(element.event_date)
             count++
