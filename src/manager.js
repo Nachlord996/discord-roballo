@@ -4,6 +4,7 @@ const Handlers = require('./handlers.js')
 const Data = require('./data') 
 const Events = require('./event')
 const Scheduler = require('node-schedule');
+const Human = require('./human')
 
 function manageDMs(client, message) {
 
@@ -80,6 +81,11 @@ function manageServerMessage(client, message) {
                     Handlers.weekTasksHandler(client, message)
                 }
                 break;
+            case '!timeleft':
+                if (cmd.length === 1){
+                    Handlers.timeleftHandler(client, message)
+                }    
+                break;
             default:
                 break;
         }
@@ -105,6 +111,11 @@ function memberAdded(member){
                             description: 'Bienvenido <@' + member.id + '>!\nDisfruta tu estadía en el servidor, la misma durará únicamente 2 horas.\n\nRecuerda que puedes consultar el tiempo restante con el comando:\n`!timeleft`'  
                     }
                 ))
+                
+                var admission = Date.now()
+                var expulsion = addHours(admission, 2)
+                Data.addGuest(member.displayName, member.id, admission, expulsion)
+
             var j = Scheduler.scheduleJob(addHours(Date.now(), 2), function(member){
                 member.kick().then((sec) => {console.log(sec)}, (err) => {console.log(err)} )
               }.bind(null, member))
@@ -118,7 +129,7 @@ function memberAdded(member){
 
 function addHours(date, hours) {
    var d = date + (hours * 3600 * 1000)    
-   return new Date(d);
+   return d;
 }
 
 function addseconds(date, scn) {

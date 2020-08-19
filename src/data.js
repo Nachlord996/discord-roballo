@@ -6,6 +6,7 @@ const Datastore = require('nedb')
 // Build up all needed structures in order to start working 
 const events = new Datastore('events.db')
 const calendar_subscribers = new Datastore('calendar_subscribers.db')
+const guests = new Datastore('guests.db')
 const humans = []
 const invites = []
 const cache_invites = {}
@@ -26,6 +27,7 @@ function loadMembersinfo() {
 function initializeData(){
   calendar_subscribers.loadDatabase()
   events.loadDatabase()
+  guests.loadDatabase()
 } 
 
 function addSubscriber(sub, success, err){
@@ -44,11 +46,19 @@ function addEvent(event){
 }
 
 function mapEvents(query, f_apply, err){
-  events.find(query, (error, docs) => {
-    console.log(docs)
-  docs != null ? f_apply(docs) : err()
+  map(events, query, f_apply, err)
+}
 
-})
+function mapGuests(query, f_apply, err){
+  map(guests, query, f_apply, err)
+}
+
+function map(db, query, f_apply, f_err){
+  db.find(query, (error, docs) => { docs != null ? f_apply(docs) : f_err()} )
+}
+
+function addGuest(nick, dm_id, admission, expulsion){
+    guests.insert(new Human.Guest(nick, dm_id, admission, expulsion))
 }
 
 exports.cache_invites = cache_invites
@@ -61,4 +71,6 @@ exports.addSubscriber = addSubscriber
 exports.isSubscriber = isSubscriber
 exports.addEvent = addEvent
 exports.mapEvents = mapEvents
+exports.mapGuests = mapGuests
+exports.addGuest = addGuest
 exports.initializeData = initializeData

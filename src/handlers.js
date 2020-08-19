@@ -167,7 +167,7 @@ function guestHandler(client, message) {
                             }]
                         }
                     ))
-    
+                    
                     client.guilds.cache.get(ID.SERVER_ID).fetchInvites().then(
                         (invites) => { Data.cache_invites = invites },
                         (err) => { console.log(err) }
@@ -178,6 +178,57 @@ function guestHandler(client, message) {
     
     }, (err) => console.log(err))
     
+}
+
+function timeleftHandler(client, message){
+    var success = (docs) => {
+        var response
+        if (docs.length == 0){
+            response = new Discord.MessageEmbed({
+                title: '💺 Algunas sillas vacías... 💺',
+                color: '#F25C05',
+                description: 'En este momento no tenemos invitados en el servidor.\nRecuerda que puedes invitar personas con el comando `!guest`'
+            })
+        } else {
+            
+            var members = ''
+            var t_left = ''
+            for (guest of docs){
+            
+                members += guest.nickname + '\n'
+                var admission = new Date(Date.now())
+                var expulsion = new Date(guest.expulsion)
+                timeleft_min = Math.floor((expulsion - admission) / 60000)
+                if (timeleft_min > 60){
+                    timeleft_hour = (timeleft_min / 60) >> 0
+                    timeleft_min = timeleft_min % 60
+                } else { 
+                    timeleft_hour = 0
+                }
+                line = timeleft_hour + 'h ' + timeleft_min + 'm'
+                t_left += line + '\n'
+            }
+            response = new Discord.MessageEmbed({
+                title: '⌚️ ¡ El tiempo vuela ! ⌚️',
+                color: '#2d37a6',
+                description: 'Terminé mis reportes, estos son los resultados:',
+                fields: [
+                    {
+                        name: 'Miembro',
+                        value: members,
+                        inline: true
+                    },
+                    {
+                        name: 'Tiempo restante',
+                        value: t_left,
+                        inline: true
+                    }
+                ]
+            })
+        }
+        message.channel.send(response)
+    }
+    Data.mapGuests({ }, success, () => console.log('Error related to database guests'))
 }
 
 function weekTasksHandler(client, message){
@@ -214,7 +265,7 @@ function weekTasksHandler(client, message){
         }))
     }
 
-    Data.mapEvents({ $and: [ {"event_date": { $lt : Date.now() + (1000 * 3600 * 24 * 7) } }, { "event_date" : { $gt : Date.now() } }] }, success, () => console.log("not found events"))
+    Data.mapEvents({ $and: [ {"event_date": { $lt : Date.now() + (1000 * 3600 * 24 * 7) } }, { "event_date" : { $gt : Date.now() } }] }, success, () => console.log("Error related to events db"))
 }
 
 class temporal_membership {
@@ -231,4 +282,5 @@ exports.cancelmessage = sendCancelationMessage
 exports.subscribeHandler = subscribeHandler
 exports.helpHanlder = helpHanlder
 exports.weekTasksHandler = weekTasksHandler
+exports.timeleftHandler = timeleftHandler
 exports.requestEventData = requestEventData

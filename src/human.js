@@ -9,4 +9,13 @@ class Human {
     }
 }
 
+class Guest {
+    constructor(nickname, dm_id, admission, expulsion){
+        this.nickname = nickname
+        this.dm_id = dm_id 
+        this.admission = admission
+        this.expulsion = expulsion
+    }
+}
 exports.Human = Human
+exports.Guest = Guest
