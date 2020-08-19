@@ -186,7 +186,7 @@ function timeleftHandler(client, message){
         if (docs.length == 0){
             response = new Discord.MessageEmbed({
                 title: '💺 Algunas sillas vacías... 💺',
-                color: '#F25C05',
+                color: '#2d37a6',
                 description: 'En este momento no tenemos invitados en el servidor.\nRecuerda que puedes invitar personas con el comando `!guest`'
             })
         } else {
@@ -228,7 +228,7 @@ function timeleftHandler(client, message){
         }
         message.channel.send(response)
     }
-    Data.mapGuests({ }, success, () => console.log('Error related to database guests'))
+    Data.mapGuests({ expulsion: { $gt: Date.now() }}, success, () => console.log('Error related to database guests'))
 }
 
 function weekTasksHandler(client, message){
