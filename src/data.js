@@ -24,6 +24,31 @@ function loadMembersinfo() {
     , (reason) => console.log(reason))
 }
 
+function fetchGuestMemberships(client, scheduler){
+  var pendingKick = (docs) => {
+    success(docs, (member, g_mem) => {
+        scheduler.scheduleJob(new Date(g_mem.expulsion), function (member) {
+        member.kick() }.bind(null, member))
+    }
+    )
+  }
+
+  var success = (docs, action) => {
+    if (docs.length > 0) {
+      for (g_member of docs){ 
+          client.guilds.cache.get(ID.SERVER_ID).members.fetch().then((members) => {
+          var member = members.get(g_member.id)
+          if (member != undefined) {
+            action(member, g_member)    
+              }
+          })     
+      }
+    }
+  } 
+
+  mapGuests({ expulsion: { $gt: Date.now() }}, pendingKick, () => console.log('Error related to database guests'))
+}
+
 function initializeData(){
   calendar_subscribers.loadDatabase()
   events.loadDatabase()
@@ -57,8 +82,8 @@ function map(db, query, f_apply, f_err){
   db.find(query, (error, docs) => { docs != null ? f_apply(docs) : f_err()} )
 }
 
-function addGuest(nick, dm_id, admission, expulsion){
-    guests.insert(new Human.Guest(nick, dm_id, admission, expulsion))
+function addGuest(nick, id, admission, expulsion){
+    guests.insert(new Human.Guest(nick, id, admission, expulsion))
 }
 
 exports.cache_invites = cache_invites
@@ -73,4 +98,5 @@ exports.addEvent = addEvent
 exports.mapEvents = mapEvents
 exports.mapGuests = mapGuests
 exports.addGuest = addGuest
+exports.fetchGuestMemberships = fetchGuestMemberships
 exports.initializeData = initializeData

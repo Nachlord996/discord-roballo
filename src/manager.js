@@ -1,54 +1,19 @@
 const Discord = require('discord.js');
 const ID = require('./server_constants.js')
 const Handlers = require('./handlers.js')
-const Data = require('./data') 
+const Data = require('./data')
 const Events = require('./event')
 const Scheduler = require('node-schedule');
 const Human = require('./human')
 
-function manageDMs(client, message) {
+function manageMessage(client, message, is_dm) {
 
     var message_sender = Data.humans.find((human) => { return human.dm_id === message.author.id })
     if (message_sender != undefined) {
         switch (message_sender.state) {
             case ID.talking_states.IDLE:
                 if (message.content.startsWith('!')) {
-                    var cmd = message.content.split(" ")
-                    switch (cmd[0]) {
-                        case '!subscribe':
-                            if (cmd.length == 1) {
-                                Handlers.subscribeHandler(message)
-                            }
-                            break;
-                        case '!help':
-                            if (cmd.length == 1) {
-                                Handlers.helpHanlder(message, true)
-                            }
-                            break;
-                        case '!event':
-                            if (cmd.length == 1) {
-                                message_sender.state = ID.talking_states.WAITING
-                                message_sender.requestState = 0
-                                message_sender.chatHandler =  Handlers.requestEventData
-                                Handlers.requestEventData(client, message, message_sender)
-                            }
-                            break
-                        case '!guest':
-                            if (cmd.length == 1){       
-                                Handlers.guestHandler(client, message)
-                            }
-                            break
-                        case '!fetchEvents':
-                            if (cmd.length == 1){
-                                Events.eventsCheck(client)
-                            }
-                        case '!week':
-                            if (cmd.length == 1){
-                                Handlers.weekTasksHandler(client, message)
-                            }
-                        default:
-                            break;
-                    }
+                    manageCommand(client, message, message_sender, is_dm)
                 }
                 break;
             case ID.talking_states.WAITING:
@@ -60,31 +25,6 @@ function manageDMs(client, message) {
                         message_sender.state = ID.talking_states.IDLE
                     }
                 }
-            default:
-                break;
-        }
-    }
-}
-
-
-function manageServerMessage(client, message) {
-    if (message.content.startsWith('!')) {
-        var cmd = message.content.split(" ")
-        switch (cmd[0]) {
-            case '!help':
-                if (cmd.length === 1) {
-                    Handlers.helpHanlder(message, false);
-                }
-                break;
-            case '!week':
-                if (cmd.length === 1) {
-                    Handlers.weekTasksHandler(client, message)
-                }
-                break;
-            case '!timeleft':
-                if (cmd.length === 1){
-                    Handlers.timeleftHandler(client, message)
-                }    
                 break;
             default:
                 break;
@@ -92,14 +32,14 @@ function manageServerMessage(client, message) {
     }
 }
 
-function memberAdded(member){
+function memberAdded(member) {
     member.guild.fetchInvites().then((invs) => {
         const old_invites = Data.cache_invites
         Data.cache_invites = invs
         const invite = invs.find(i => old_invites.get(i.code).uses < i.uses)
-        
+
         const temporal = Data.invites.find(x => (x.code === invite.code) && (x.start_date == undefined))
-        if (temporal != undefined){
+        if (temporal != undefined) {
             temporal.start_date = Date.now()
             var role = member.guild.roles.cache.find(role => role.name === "Guest");
             member.roles.add(role)
@@ -108,35 +48,60 @@ function memberAdded(member){
                     {
                         color: '#2d37a6',
                         title: "🛎️ ¡ Unión temporal detectada ! 🛎️",
-                            description: 'Bienvenido <@' + member.id + '>!\nDisfruta tu estadía en el servidor, la misma durará únicamente 2 horas.\n\nRecuerda que puedes consultar el tiempo restante con el comando:\n`!timeleft`'  
+                        description: 'Bienvenido <@' + member.id + '>!\nDisfruta tu estadía en el servidor, la misma durará únicamente 2 horas.\n\nRecuerda que puedes consultar el tiempo restante con el comando:\n`!timeleft`'
                     }
                 ))
-                
-                var admission = Date.now()
-                var expulsion = addHours(admission, 2)
-                Data.addGuest(member.displayName, member.id, admission, expulsion)
 
-            var j = Scheduler.scheduleJob(addHours(Date.now(), 2), function(member){
-                member.kick().then((sec) => {console.log(sec)}, (err) => {console.log(err)} )
-              }.bind(null, member))
+            var admission = Date.now()
+            var expulsion = addHours(admission, 2)
+            Data.addGuest(member.displayName, member.id, admission, expulsion)
+
+            Scheduler.scheduleJob(addHours(Date.now(), 2), function (member) {
+                member.kick() }.bind(null, member))
 
             invs.find(i => old_invites.get(i.code).uses < i.uses).delete()
         }
 
-     } , (err) => console.log(err))
+    }, (err) => console.log(err))
 }
 
-
-function addHours(date, hours) {
-   var d = date + (hours * 3600 * 1000)    
-   return d;
+function manageCommand(client, message, sender, is_dm) {
+    var cmd = message.content.split(" ")
+    if (cmd.length == 1) {
+        switch (cmd[0]) {
+            case '!subscribe':
+                Handlers.subscribeHandler(message)
+                break;
+            case '!help':
+                Handlers.helpHanlder(message, is_dm)
+                break;
+            case '!event':
+                sender.state = ID.talking_states.WAITING
+                sender.requestState = 0
+                sender.chatHandler = Handlers.requestEventData
+                Handlers.requestEventData(client, message, sender)
+                break
+            case '!guest':
+                Handlers.guestHandler(client, message)
+                break
+            case '!fetchEvents':
+                Events.eventsCheck(client)
+            case '!week':
+                Handlers.weekTasksHandler(client, message)
+                break
+            case '!timeleft':
+                Handlers.timeleftHandler(client, message)
+                break;
+            default:
+                Handlers.unknownCmdHandler(message)
+        }
+    }
 }
 
-function addseconds(date, scn) {
-    var d = date + (scn * 1000)    
-    return new Date(d);
- }
+    function addHours(date, hours) {
+        var d = date + (hours * 3600 * 1000)
+        return d;
+    }
 
-exports.memberAdded = memberAdded
-exports.serverMessage = manageServerMessage
-exports.directMessage = manageDMs 
+    exports.memberAdded = memberAdded
+    exports.manageMessage = manageMessage

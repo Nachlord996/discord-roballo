@@ -10,9 +10,9 @@ class Human {
 }
 
 class Guest {
-    constructor(nickname, dm_id, admission, expulsion){
+    constructor(nickname, id, admission, expulsion){
         this.nickname = nickname
-        this.dm_id = dm_id 
+        this.id = id
         this.admission = admission
         this.expulsion = expulsion
     }

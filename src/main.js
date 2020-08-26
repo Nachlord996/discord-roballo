@@ -4,7 +4,7 @@ const client = new Discord.Client();
 const Scheduler = require('node-schedule');
 const ID = require('./server_constants.js')
 const { eventsCheck } = require('./event.js')
-const { serverMessage, directMessage, memberAdded } = require('./manager') 
+const { manageMessage, memberAdded } = require('./manager') 
 const fs = require('fs');
 const Data = require('./data')
 
@@ -24,6 +24,7 @@ init_promise.then(initializeServer, (() => console.log('Invalid token, exiting..
 function initializeServer() {
   console.log('Building up server, this may take a while...')
 
+  // Restore data from databases
   Data.initializeData()
 
   var rule = new Scheduler.RecurrenceRule(null, null, null, null, 12, 0);
@@ -31,8 +32,10 @@ function initializeServer() {
 
   Data.loadMembersinfo(client)
   
+  Data.fetchGuestMemberships(client, Scheduler)
+
   // Middleware for upcoming messages and events
-  client.on('message', (message) => { if (!IsbotMessage(message)) { if (message.channel.type === 'dm') { directMessage(client, message) } else { serverMessage(client,message) } } })
+  client.on('message', (message) => { if (!IsbotMessage(message)) { manageMessage(client, message , message.channel.type === 'dm') } })
   client.on('guildMemberAdd', (member) => memberAdded(member))
   
   console.log('Server is up, bot commands are now available!')

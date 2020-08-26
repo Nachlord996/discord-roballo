@@ -231,6 +231,14 @@ function timeleftHandler(client, message){
     Data.mapGuests({ expulsion: { $gt: Date.now() }}, success, () => console.log('Error related to database guests'))
 }
 
+function unknownCmdHandler(message){
+    message.channel.send(new Discord.MessageEmbed({
+        title: '🤖 Algo ha salido mal... 🤖',
+        color: '#2d37a6',
+        description: 'Has utilizado un comando desconocido. Para recibir ayuda envía: \n`!help`'
+    }))
+}
+
 function weekTasksHandler(client, message){
 
     var success = (docs) => {
@@ -284,3 +292,4 @@ exports.helpHanlder = helpHanlder
 exports.weekTasksHandler = weekTasksHandler
 exports.timeleftHandler = timeleftHandler
 exports.requestEventData = requestEventData
+exports.unknownCmdHandler = unknownCmdHandler
